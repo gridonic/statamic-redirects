@@ -2,7 +2,7 @@ fields:
   access_roles:
     type: list
     display: Access to manage redirects
-    instructions: Restrict access to view and manage redirects to certain roles. If empty, all roles are able to view and manage redirects.
+    instructions: Restrict access to view and manage redirects to certain roles. If empty, all roles are able to view and manage. Enter role slugs.
   log_404_enable:
     type: toggle
     display: Log 404s
@@ -11,4 +11,3 @@ fields:
     type: toggle
     display: Enable auto redirects
     instructions: The module keeps track of changed URLs when moving pages or changing slugs, and automatically redirects old URLs to the new ones.
-

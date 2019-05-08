@@ -1,4 +1,4 @@
-Vue.component("redirects-list", {
+Vue.component('redirects-list', {
     mixins: [Dossier],
     props: ['translations', 'get', 'delete', 'reorder', 'columns', 'actions'],
     data: function () {

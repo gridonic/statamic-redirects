@@ -4,10 +4,15 @@ namespace Statamic\Addons\Redirects\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Statamic\Addons\Redirects\RedirectsAuthTrait;
+use Statamic\API\User;
+use Statamic\Exceptions\UnauthorizedHttpException;
 use Statamic\Extend\Controller;
 
 abstract class RedirectsController extends Controller
 {
+    use RedirectsAuthTrait;
+
     public function __construct()
     {
         parent::__construct();
@@ -28,7 +33,8 @@ abstract class RedirectsController extends Controller
 
     private function checkAccess()
     {
-        //        throw new UnauthorizedHttpException(403);
-
+        if (!$this->hasAccess(User::getCurrent())) {
+            throw new UnauthorizedHttpException(403);
+        }
     }
 }

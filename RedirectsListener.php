@@ -3,6 +3,7 @@
 namespace Statamic\Addons\Redirects;
 
 use Statamic\API\URL;
+use Statamic\API\User;
 use Statamic\Contracts\Data\Pages\Page;
 use Statamic\Events\Data\ContentDeleted;
 use Statamic\Events\Data\ContentSaved;
@@ -16,6 +17,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectsListener extends Listener
 {
+    use RedirectsAuthTrait;
+
     /**
      * The events to be listened for, and the methods to call.
      *
@@ -23,6 +26,7 @@ class RedirectsListener extends Listener
      */
     public $events = [
         'cp.nav.created' => 'addNavItems',
+        'cp.add_to_head' => 'addToHead',
         'response.created' => 'onResponseCreated',
         'Statamic\Events\Data\PageMoved' => 'onPageMoved',
         'Statamic\Events\Data\PageSaved' => 'onPageSaved',
@@ -40,6 +44,10 @@ class RedirectsListener extends Listener
      */
     public function addNavItems($nav)
     {
+        if (!$this->hasAccess(User::getCurrent())) {
+            return;
+        }
+
         $root = Nav::item('redirects')
             ->title('Redirects')
             ->route('redirects.index')
@@ -64,6 +72,13 @@ class RedirectsListener extends Listener
         });
 
         $nav->addTo('tools', $root);
+    }
+
+    public function addToHead()
+    {
+        $css = $this->css->url('styles.css');
+
+        return '<link rel="stylesheet" type="text/css" href="' . $css . '">';
     }
 
     /**
@@ -98,7 +113,14 @@ class RedirectsListener extends Listener
 
     public function onPageSaved(PageSaved $event)
     {
-        $oldPath = $event->original['attributes']['path'];
+        $originalAttributes = $event->original['attributes'];
+
+        // If the original path is not set, the page is newly created, no redirects needed.
+        if (!isset($originalAttributes['path'])) {
+            return;
+        }
+
+        $oldPath = $originalAttributes['path'];
         $newPath = $event->data->path();
 
         $this->handlePageRedirects($event->data, $oldPath, $newPath);

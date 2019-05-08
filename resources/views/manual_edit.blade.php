@@ -14,8 +14,9 @@
         title="{{ $title }}"
         id="{{ $id }}"
         submit-url="{{ $submitUrl }}"
-        content-type="addon"
+        content-type="addon_redirects"
         :meta-fields="false"
         :is-new="{{ bool_str($id === null) }}"
+        :allowSaveAndAddAnother="false"
     ></publish>
 @endsection
