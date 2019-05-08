@@ -1,5 +1,6 @@
 name: Redirects
-version: 0.1.0
+version: 1.0.0
 description: 'Manages redirects and monitors 404 requests.'
 developer: Gridonic
 developer_url: 'https://gridonic.ch'
+commercial: true
