@@ -291,7 +291,7 @@ class RedirectsTest extends TestCase
 
     public function createApplication()
     {
-        $app = require __DIR__ . '/../../../../statamic/bootstrap/app.php';
+        $app = require statamic_path('/bootstrap') . '/app.php';
 
         $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
