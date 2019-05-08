@@ -17,6 +17,7 @@ install:
     - cd ../
 
     # Copy addon to site/addons
+    - mkdir -p site/addons/Redirects
     - cp -R $TRAVIS_BUILD_DIR/* site/addons/Redirects
 
 script:
