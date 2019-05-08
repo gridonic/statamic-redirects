@@ -72,7 +72,7 @@ class RedirectsLoggerTest extends TestCase
         parent::tearDown();
 
         foreach (['404', 'manual', 'auto'] as $what) {
-            unlink($this->storagePath . sprintf('log_%s.yaml', $what));
+            @unlink($this->storagePath . sprintf('log_%s.yaml', $what));
         }
     }
 

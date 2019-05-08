@@ -149,7 +149,7 @@ class ManualRedirectsManagerTest extends TestCase
     {
         parent::tearDown();
 
-        unlink($this->storagePath);
+        @unlink($this->storagePath);
     }
 
     private function getRedirectsFromYamlFile()

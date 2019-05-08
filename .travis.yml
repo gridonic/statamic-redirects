@@ -16,8 +16,8 @@ install:
     - cd statamic-addon-test/statamic && composer install
     - cd ../
 
-    # Symlink addon to site/addons
-    - ln -s $TRAVIS_BUILD_DIR site/addons/Redirects
+    # Copy addon to site/addons
+    - cp -R $TRAVIS_BUILD_DIR/* site/addons/Redirects
 
 script:
-    - php please test:addons --group redirects
+    - statamic/vendor/bin/phpunit --group redirects
