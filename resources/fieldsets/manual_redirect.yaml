@@ -59,8 +59,6 @@ locale:
   width: 50
   options:
     ~: ''
-    de: DE
-    en: EN
 timed_activation:
   type: toggle
   display: Timed Activation

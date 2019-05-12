@@ -222,6 +222,11 @@ class ManualRedirectsController extends RedirectsController
             unset($fields['target_type']['options']['term']);
         }
 
+        // Inject available locales
+        foreach (Config::get('system.locales', []) as $key => $data) {
+            $fields['locale']['options'][$key] = $data['name'];
+        }
+
         // Translate labels and instructions.
         $namespace = 'fieldsets/manual_redirect';
 

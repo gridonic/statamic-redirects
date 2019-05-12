@@ -116,20 +116,63 @@ class RedirectsTest extends TestCase
 
     /**
      * @test
+     * @dataProvider placeholdersDataProvider
      */
-    public function it_should_redirect_using_placeholders()
+    public function it_should_redirect_using_parameters($redirects, $requestUrl, $redirectedUrl)
     {
-        $redirect = (new ManualRedirect())
-            ->setFrom('/news/{year}/{month}/{slug}')
-            ->setTo('/blog/{month}/{year}/{slug}');
+        foreach ($redirects as $fromUrl => $toUrl) {
+            $redirect = (new ManualRedirect())
+                ->setFrom($fromUrl)
+                ->setTo($toUrl);
 
-        $this->manualRedirectsManager
-            ->add($redirect)
-            ->flush();
+            $this->manualRedirectsManager->add($redirect);
+        }
 
-        $this->get('/news/2019/01/some-sluggy-slug');
+        $this->manualRedirectsManager->flush();
 
-        $this->assertRedirectedTo('/blog/01/2019/some-sluggy-slug');
+        $this->get($requestUrl);
+
+        $this->assertRedirectedTo($redirectedUrl);
+    }
+
+    public function placeholdersDataProvider()
+    {
+        return [
+            [
+                [
+                    '/foo' => '/unmatched',
+                    '/news/{slug}' => '/unmatched/{slug}',
+                    '/news/{year}/{month}' => '/unmatched/{year}/{month}',
+                    '/news/{any}' => '/blog/{any}',
+                ],
+                '/news/2019/01/slug',
+                '/blog/2019/01/slug',
+            ],
+            [
+                [
+                    '/news/{slug}' => '/blog/hardcoded-slug',
+                    '/news/{any}' => '/blog/{any}',
+                ],
+                '/news/slug',
+                '/blog/hardcoded-slug',
+            ],
+            [
+                [
+                    '/news/{any}' => '/blog/{any}',
+                    '/news/{slug}' => '/blog/hardcoded-slug',
+                ],
+                '/news/slug',
+                '/blog/slug',
+            ],
+            [
+                [
+                    '/foo/{any}' => '/unmatched/{any}',
+                    '/news/{year}/{month}/{slug}' => '/blog/{month}/{year}/{slug}'
+                ],
+                '/news/2019/01/slug',
+                '/blog/01/2019/slug',
+            ],
+        ];
     }
 
     /**

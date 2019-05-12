@@ -12,6 +12,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RedirectsProcessor
 {
+    const WILDCARD_NAME = 'any';
+
     /**
      * @var RedirectsManager
      */
@@ -128,41 +130,49 @@ class RedirectsProcessor
     }
 
     /**
-     * Normalize the given URL to an URL we can redirect to.
+     * Normalize the given target URL to an URL we can redirect to.
      *
-     * @param string $url The raw URL we should redirect to
-     * @param string $matchedRoute The manual redirect route matched by the request
+     * @param string $targetUrl The URL we should redirect to
+     * @param string $matchedRoute The matched route by the current request
      * @param Request $request
      *
      * @return string|null
      */
-    private function normalizeRedirectUrl($url, $matchedRoute, Request $request)
+    private function normalizeRedirectUrl($targetUrl, $matchedRoute, Request $request)
     {
-        if (Str::startsWith($url, '/')) {
-            // The target URL is relative, check for placeholders and replace them.
-            if (preg_match_all('%\{(\w+)\}%', $matchedRoute, $matches)) {
+        // The target URL is relative, check for parameters and replace them.
+        if (Str::startsWith($targetUrl, '/')) {
+            $wildcardParameter = $this->getWildcardParameter();
+            if (strpos($matchedRoute, $wildcardParameter) !== false) {
+                // The special {any} parameter captures any number of URL segments.
+                $pattern = str_replace(['/', $wildcardParameter], ["\/", '(.*)'], $matchedRoute);
+                preg_match('%' . $pattern . '%', $request->getPathInfo(), $matches);
+
+                return str_replace($wildcardParameter, $matches[1], $targetUrl);
+            } else if (preg_match_all('%\{(\w+)\}%', $matchedRoute, $matches)) {
+                // Any other parameters capture exactly one URL segment.
                 $segmentsRoute = explode('/', ltrim($matchedRoute, '/'));
                 $segmentsRequestPath = explode('/', ltrim($request->getPathInfo(), '/'));
                 $replacements = [];
-                foreach ($matches[0] as $placeholder) {
+                foreach ($matches[0] as $parameter) {
                     // Find the position of the placeholder within the route.
-                    $pos = array_search($placeholder, $segmentsRoute);
+                    $pos = array_search($parameter, $segmentsRoute);
                     if ($pos === false) {
                         continue;
                     }
-                    $replacements[$placeholder] = $segmentsRequestPath[$pos];
+                    $replacements[$parameter] = $segmentsRequestPath[$pos];
                 }
 
-                return str_replace($matches[0], $replacements, $url);
+                return str_replace($matches[0], $replacements, $targetUrl);
             }
 
-            return $url;
+            return $targetUrl;
         }
 
         /** @var \Statamic\Contracts\Data\Content\Content $content */
-        $content = Content::find($url);
+        $content = Content::find($targetUrl);
         if ($content && $content->uri()) {
-            $localizedContent = $content->in($request->getLocale());
+            $localizedContent = $content->in(site_locale());
 
             return $localizedContent->url();
         }
@@ -203,8 +213,19 @@ class RedirectsProcessor
 
         foreach ($redirects as $redirect) {
             $data = $redirect->toArray();
+
             $route = new Route(['GET'], $data['from'], function () {});
+
+            if (strpos($data['from'], $this->getWildcardParameter()) !== false) {
+                $route->where(self::WILDCARD_NAME, '(.*)');
+            }
+
             $this->routeCollections[$which]->add($route);
         }
+    }
+
+    private function getWildcardParameter()
+    {
+        return sprintf('{%s}', self::WILDCARD_NAME);
     }
 }
