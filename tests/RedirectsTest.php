@@ -9,8 +9,11 @@ use Statamic\Addons\Redirects\ManualRedirect;
 use Statamic\Addons\Redirects\ManualRedirectsManager;
 use Statamic\Addons\Redirects\RedirectsLogger;
 use Statamic\Addons\Redirects\RedirectsProcessor;
+use Statamic\API\Config;
+use Statamic\API\Entry;
 use Statamic\API\Page;
 use Statamic\API\Stache;
+use Statamic\Config\Settings;
 
 /**
  * @group redirects
@@ -52,6 +55,11 @@ class RedirectsTest extends TestCase
      */
     private $pages = [];
 
+    /**
+     * @var \Statamic\Contracts\Data\Entries\Entry[]
+     */
+    private $entries = [];
+
     public function setUp()
     {
         parent::setUp();
@@ -73,6 +81,15 @@ class RedirectsTest extends TestCase
         $this->app->singleton(RedirectsProcessor::class, function () {
             return new RedirectsProcessor($this->manualRedirectsManager, $this->autoRedirectsManager, $this->redirectsLogger);
         });
+
+        // Create a second locale for testing multi language.
+        $this->app[Settings::class]->set('system.locales.de', [
+            'name' => 'German',
+            'full' => 'de_DE',
+            'url' => '/de',
+        ]);
+
+        $this->app[Settings::class]->save();
     }
 
     /**
@@ -343,7 +360,7 @@ class RedirectsTest extends TestCase
     /**
      * @test
      */
-    public function it_should_create_redirects_when_slugs_change()
+    public function it_should_create_redirects_when_the_slug_of_a_page_changes()
     {
         $parent = $this->createPage('/parent');
         $child = $this->createPage('/parent/child');
@@ -390,6 +407,31 @@ class RedirectsTest extends TestCase
     /**
      * @test
      */
+    public function it_should_create_redirects_when_the_slug_of_an_entry_changes()
+    {
+        // TODO: We rely on the collection "things" of Statamic's default installation. Create our own here...
+        $entry = $this->createEntry('entry');
+        $entry->in('de')->set('slug', 'eintrag');
+        $entry->save();
+
+        $this->assertEquals([], $this->autoRedirectsManager->all());
+
+        $entry->slug('entry-new');
+        $entry->in('de')->set('slug', 'eintrag-neu');
+        $entry->save();
+
+        $autoRedirect = $this->autoRedirectsManager->get('/things/entry');
+        $this->assertEquals('/things/entry-new', $autoRedirect->getToUrl());
+        $this->assertEquals($entry->id(), $autoRedirect->getContentId());
+
+        $autoRedirect = $this->autoRedirectsManager->get('/de/things/eintrag');
+        $this->assertEquals('/de/things/eintrag-neu', $autoRedirect->getToUrl());
+        $this->assertEquals($entry->id(), $autoRedirect->getContentId());
+    }
+
+    /**
+     * @test
+     */
     public function it_should_log_404_requests()
     {
         $this->get('/not-existing-source');
@@ -416,6 +458,10 @@ class RedirectsTest extends TestCase
             $page->delete();
         }
 
+        foreach ($this->entries as $entry) {
+            $entry->delete();
+        }
+
         @unlink($this->storagePath . 'auto.yaml');
         @unlink($this->storagePath . 'manual.yaml');
         @unlink($this->storagePath . 'log_auto.yaml');
@@ -426,8 +472,21 @@ class RedirectsTest extends TestCase
     }
 
     /**
-     * @param string $url
-     *
+     * @return \Statamic\Contracts\Data\Entries\Entry
+     */
+    private function createEntry($slug)
+    {
+        $entry = Entry::create($slug)
+            ->collection('things')
+            ->get()
+            ->save();
+
+        $this->entries[] = $entry;
+
+        return $entry;
+    }
+
+    /**
      * @return \Statamic\Contracts\Data\Pages\Page
      */
     private function createPage($url)

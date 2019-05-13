@@ -2,8 +2,10 @@
 
 namespace Statamic\Addons\Redirects;
 
+use Statamic\API\Config;
 use Statamic\API\URL;
 use Statamic\API\User;
+use Statamic\Contracts\Data\Data;
 use Statamic\Contracts\Data\Pages\Page;
 use Statamic\Events\Data\ContentDeleted;
 use Statamic\Events\Data\ContentSaved;
@@ -132,28 +134,43 @@ class RedirectsListener extends Listener
             return;
         }
 
-        if (!$event->data->uri()) {
+        $content = $event->data;
+        if (!$content->uri()) {
             return;
         }
 
-        $slug = $event->data->slug();
-        $oldSlug = $event->original['attributes']['slug'];
+        foreach ($this->getLocales() as $locale) {
+            $localizedContent = $content->in($locale);
 
-        if ($slug === $oldSlug) {
-            $this->deleteRedirectsOfUrl($event->data->url());
-            return;
+            $oldSlug = null;
+            if ($locale === Config::getDefaultLocale()) {
+                $oldSlug = $event->original['attributes']['slug'];
+            } else if (isset($event->original['data'][$locale]) && isset($event->original['data'][$locale]['slug'])){
+                $oldSlug = $event->original['data'][$locale]['slug'];
+            }
+
+            if ($oldSlug === null) {
+                continue;
+            }
+
+            $slug = $localizedContent->slug();
+
+            if ($slug === $oldSlug) {
+                $this->deleteRedirectsOfUrl($localizedContent->url());
+                continue;
+            }
+
+            $oldUrl = str_replace("/$slug", "/$oldSlug", $localizedContent->url());
+
+            $autoRedirect = (new AutoRedirect())
+                ->setFromUrl($oldUrl)
+                ->setToUrl($localizedContent->url())
+                ->setContentId($content->id());
+
+            app(AutoRedirectsManager::class)->add($autoRedirect);
         }
 
-        $oldUrl = str_replace("/$slug", "/$oldSlug", $event->data->url());
-
-        $autoRedirect = (new AutoRedirect())
-            ->setFromUrl($oldUrl)
-            ->setToUrl($event->data->url())
-            ->setContentId($event->data->id());
-
-        app(AutoRedirectsManager::class)
-            ->add($autoRedirect)
-            ->flush();
+        app(AutoRedirectsManager::class)->flush();
     }
 
     public function onContentDeleted(ContentDeleted $event)
@@ -165,7 +182,7 @@ class RedirectsListener extends Listener
             ->flush();
     }
 
-    private function handlePageRedirects(Page $page, $oldPath, $newPath)
+    private function handlePageRedirects($page, $oldPath, $newPath)
     {
         if (!$this->getConfigBool('auto_redirect_enable')) {
             return;
@@ -223,5 +240,10 @@ class RedirectsListener extends Listener
                 ->remove($url)
                 ->flush();
         }
+    }
+
+    private function getLocales()
+    {
+        return Config::getLocales();
     }
 }
