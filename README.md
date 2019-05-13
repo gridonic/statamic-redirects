@@ -5,10 +5,10 @@
 
 A [Statamic](https://statamic.com) Addon to manage redirects.
 
-* Automatically redirects old URLs when changing slugs or moving pages
-* Provides a clean UI to manage redirects with customized status code, timed activation and Statamic content as target
-* Offers the possibility to create multiple redirects by defining routes with placeholders
-* Monitors 404 requests to quickly detect missing redirects
+* Automatically redirects old URLs of content (Pages, Entries, Terms) to the new ones.
+* Provides a clean UI to manage redirects with customized status code, timed activation and Statamic content as target.
+* Offers the possibility to redirect multiple URLs by using route parameters.
+* Logs and displays 404 requests with the possibility to to quickly create missing redirects.
 
 > Redirects is a commercial Addon. You can use it for free while in development, but it requires a license to be used on a live site.
 
