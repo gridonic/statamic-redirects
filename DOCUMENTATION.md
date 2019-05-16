@@ -58,6 +58,8 @@ In case of pages, the module recursively creates redirects for children.
 
 > Auto redirects are viewable and deletable in the control panel, but they cannot be edited via user interface.
 
+> The action dropdown offers a "Create Redirect" option to quickly fix 404s. 
+
 ## 404 Monitor
 
 The 404 monitor shows logged 404 requests with the possibility to quickly create missing redirects.
@@ -82,13 +84,13 @@ or to use [automatic dependency injection](https://laravel.com/docs/5.8/containe
 
 ## Redirects Storage
 
-Redirects and logs are stored as YAML files in the `/site/storage/addons/redirects` folder.
+Redirects and logs are stored as YAML files in the `/site/storage/addons/redirects` directory.
 
 ### `manual.yaml`
 
 ```yaml
-'/source/':
-  to: '/target/'
+'/source':
+  to: '/target'
   status_code: 301
   locale: null
   retain_query_strings: true
@@ -99,15 +101,15 @@ Redirects and logs are stored as YAML files in the `/site/storage/addons/redirec
 For redirects to Statamic content, use the content's ID as target:
 
 ```yaml
-'/best-blog-post-ever/':
+'/best-blog-post-ever':
   to: '3cd2d431-699c-417c-8d57-9183cd17a6fc'
 ```
 
 ### `auto.yaml`
 
 ```yaml
-/de/ueber-mich/grosskind:
-  to: /de/ueber/grosskind
+/i-came-here-to-drink-milk-and-kick-ass:
+  to: /and-i-have-just-finished-my-milk
   content_id: 39f64fc4-9598-433a-9adc-3019fcbde7d9
 ```
 
