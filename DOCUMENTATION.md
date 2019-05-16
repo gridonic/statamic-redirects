@@ -51,16 +51,16 @@ the current request's URL. You can reorder manual redirects in the control panel
 
 The module listens to various events to detect changed URLs of content and to redirect ols URLs to the new ones.
 
-* Updated slugs when content is saved
+* Updated URLs when changing slugs
 * Updated URLs due to moving pages in the page tree
 
-In case of pages, the module recursively creates redirects for affected children. Multi language is supported as well.
+In case of pages, the module recursively creates redirects for children.
 
 > Auto redirects are viewable and deletable in the control panel, but they cannot be edited via user interface.
 
 ## 404 Monitor
 
-The 404 monitor shows logged 404 requests with the possibility to quickly create redirects.
+The 404 monitor shows logged 404 requests with the possibility to quickly create missing redirects.
 
 ## API
 
@@ -78,4 +78,36 @@ $this->api('Redirects')->logger();
 ```
 
 The above services are also registered in Laravel's service container, allowing you to resolve them from the container
-or use [automatic dependency injection](https://laravel.com/docs/5.8/container#automatic-injection).
+or to use [automatic dependency injection](https://laravel.com/docs/5.8/container#automatic-injection).
+
+## Redirects Storage
+
+Redirects and logs are stored as YAML files in the `/site/storage/addons/redirects` folder.
+
+### `manual.yaml`
+
+```yaml
+'/source/':
+  to: '/target/'
+  status_code: 301
+  locale: null
+  retain_query_strings: true
+  start_date: '2019-01-01 00:00:00'
+  end_date: null
+```
+
+For redirects to Statamic content, use the content's ID as target:
+
+```yaml
+'/best-blog-post-ever/':
+  to: '3cd2d431-699c-417c-8d57-9183cd17a6fc'
+```
+
+### `auto.yaml`
+
+```yaml
+/de/ueber-mich/grosskind:
+  to: /de/ueber/grosskind
+  content_id: 39f64fc4-9598-433a-9adc-3019fcbde7d9
+```
+
