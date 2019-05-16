@@ -201,7 +201,7 @@ class RedirectsProcessor
             $route = $this->routeCollections[$which]->match($request);
 
             if ($this->doesCurrentLocaleMatchBaseUrl($request)) {
-                return '/' . site_locale() . $route->getUri();
+                return $this->getBaseUrlOfCurrentLocale() . $route->getUri();
             }
 
             return $route->getUri();
@@ -218,7 +218,7 @@ class RedirectsProcessor
 
         $this->routeCollections[$which] = new RouteCollection();
         $redirects = ($which === 'manual') ? $this->manualRedirectsManager->all() : $this->autoRedirectsManager->all();
-        $locale = site_locale();
+        $baseUrl = $this->getBaseUrlOfCurrentLocale();
 
         foreach ($redirects as $redirect) {
             $data = $redirect->toArray();
@@ -226,7 +226,7 @@ class RedirectsProcessor
 
             // We have to ignore the language prefix for the route, otherwise Statamic's router does not match the request's path.
             if ($this->doesCurrentLocaleMatchBaseUrl($request)) {
-                $from = preg_replace("#^\/{$locale}(\/.*)#", '$1', $from);
+                $from = preg_replace("#^{$baseUrl}(\/.*)#", '$1', $from);
             }
 
             $route = new Route(['GET'], $from, function () {});
@@ -241,14 +241,16 @@ class RedirectsProcessor
 
     private function doesCurrentLocaleMatchBaseUrl(Request $request)
     {
-        $locale = site_locale();
-        $baseUrl = '/' . $locale;
-
-        return $request->getBaseUrl() === $baseUrl;
+        return $request->getBaseUrl() === $this->getBaseUrlOfCurrentLocale();
     }
 
     private function getWildcardParameter()
     {
         return sprintf('{%s}', self::WILDCARD_NAME);
+    }
+
+    private function getBaseUrlOfCurrentLocale()
+    {
+        return rtrim(Config::getSiteUrl(), '/');
     }
 }
