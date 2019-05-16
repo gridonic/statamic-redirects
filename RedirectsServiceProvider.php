@@ -2,6 +2,8 @@
 
 namespace Statamic\Addons\Redirects;
 
+use Illuminate\Contracts\Http\Kernel;
+use Statamic\Addons\Redirects\Middleware\RedirectsMiddleware;
 use Statamic\Extend\ServiceProvider;
 
 class RedirectsServiceProvider extends ServiceProvider
@@ -27,6 +29,15 @@ class RedirectsServiceProvider extends ServiceProvider
         $this->app->singleton(RedirectsLogger::class, function () use ($storagePath) {
             return new RedirectsLogger($storagePath);
         });
+
+        $this->app->singleton(RedirectsMaintenance::class, function () {
+            return new RedirectsMaintenance();
+        });
+    }
+
+    public function boot()
+    {
+        $this->registerMiddleware();
     }
 
     public function provides()
@@ -36,6 +47,12 @@ class RedirectsServiceProvider extends ServiceProvider
             AutoRedirectsManager::class,
             RedirectsProcessor::class,
             RedirectsLogger::class,
+            RedirectsMaintenance::class,
         ];
+    }
+
+    private function registerMiddleware()
+    {
+        $this->app[Kernel::class]->pushMiddleware(RedirectsMiddleware::class);
     }
 }

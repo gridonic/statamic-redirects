@@ -94,41 +94,51 @@ class RedirectsTest extends TestCase
 
     /**
      * @test
+     * @dataProvider redirectUrlsDataProvider
      */
-    public function it_should_redirect_based_on_auto_redirects()
+    public function it_should_redirect_based_on_auto_redirects($from, $to)
     {
         $redirect = (new AutoRedirect())
-            ->setFromUrl('/not-existing-source-auto')
-            ->setToUrl('/target')
+            ->setFromUrl($from)
+            ->setToUrl($to)
             ->setContentId('1234');
 
         $this->autoRedirectsManager
             ->add($redirect)
             ->flush();
 
-        $this->get('/not-existing-source-auto');
+        $this->get($from);
 
-        $this->assertRedirectedTo('/target');
-        $this->assertEquals(['/not-existing-source-auto' => 1], $this->redirectsLogger->getAutoRedirects());
+        $this->assertRedirectedTo($to);
+        $this->assertEquals([$from => 1], $this->redirectsLogger->getAutoRedirects());
     }
 
     /**
      * @test
+     * @dataProvider redirectUrlsDataProvider
      */
-    public function it_should_redirect_based_on_manual_redirects()
+    public function it_should_redirect_based_on_manual_redirects($from, $to)
     {
         $redirect = (new ManualRedirect())
-            ->setFrom('/not-existing-source-manual')
-            ->setTo('/target');
+            ->setFrom($from)
+            ->setTo($to);
 
         $this->manualRedirectsManager
             ->add($redirect)
             ->flush();
 
-        $this->get('/not-existing-source-manual');
+        $this->get($from);
 
-        $this->assertRedirectedTo('/target');
-        $this->assertEquals(['/not-existing-source-manual' => 1], $this->redirectsLogger->getManualRedirects());
+        $this->assertRedirectedTo($to);
+        $this->assertEquals([$from => 1], $this->redirectsLogger->getManualRedirects());
+    }
+
+    public function redirectUrlsDataProvider()
+    {
+        return [
+            ['/from', '/to'],
+            ['/de/from', '/de/to']
+        ];
     }
 
     /**
@@ -363,9 +373,12 @@ class RedirectsTest extends TestCase
     public function it_should_create_redirects_when_the_slug_of_a_page_changes()
     {
         $parent = $this->createPage('/parent');
+        $parent->in('de')->set('slug', 'vater');
+        $parent->save();
         $child = $this->createPage('/parent/child');
 
         $parent->slug('parent-new');
+        $parent->in('de')->set('slug', 'vater-neu');
         $parent->save();
 
         $autoRedirect = $this->autoRedirectsManager->get('/parent');
@@ -373,6 +386,10 @@ class RedirectsTest extends TestCase
         $this->assertEquals($parent->id(), $autoRedirect->getContentId());
 
         $this->markTestIncomplete('The Pages API does not recognize that the created parent page has a child, so the recursive creation of redirects does not work. Why? Probably a caching problem in the test environment.');
+
+        $autoRedirect = $this->autoRedirectsManager->get('/de/vater');
+        $this->assertEquals('/de/parent-neu', $autoRedirect->getToUrl());
+        $this->assertEquals($parent->id(), $autoRedirect->getContentId());
 
         $autoRedirect = $this->autoRedirectsManager->get('/parent/child');
         $this->assertEquals('/parent-new/child', $autoRedirect->getToUrl());

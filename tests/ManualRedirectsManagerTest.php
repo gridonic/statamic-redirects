@@ -145,6 +145,22 @@ class ManualRedirectsManagerTest extends TestCase
         $this->assertEquals(['/foo2', '/foo', '/foo3'], $routes);
     }
 
+    /**
+     * @test
+     */
+    public function it_should_not_save_a_redirect_if_the_source_equals_the_target()
+    {
+        $redirect = (new ManualRedirect())
+            ->setFrom('/foo')
+            ->setTo('/foo');
+
+        $this->manualRedirectsManager
+            ->add($redirect)
+            ->flush();
+
+        $this->assertEmpty($this->manualRedirectsManager->all());
+    }
+
     public function tearDown()
     {
         parent::tearDown();

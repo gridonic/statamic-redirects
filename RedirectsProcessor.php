@@ -5,8 +5,10 @@ namespace Statamic\Addons\Redirects;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\RouteCollection;
+use Statamic\API\Config;
 use Statamic\API\Content;
 use Statamic\API\Str;
+use Statamic\API\URL;
 use Statamic\Exceptions\RedirectException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -72,7 +74,7 @@ class RedirectsProcessor
         }
 
         $this->redirectsLogger
-            ->logAutoRedirect($request->getPathInfo())
+            ->logAutoRedirect($route)
             ->flush();
 
         $this->throwRedirectException($redirect->getToUrl(), 301);
@@ -182,18 +184,25 @@ class RedirectsProcessor
 
     private function throwRedirectException($url, $statusCode)
     {
+        // Need absolute URL because of: https://github.com/statamic/v2-hub/issues/2303
+        $absoluteUrl = URL::makeAbsolute($url, Config::getDefaultLocale());
+
         throw (new RedirectException())
-            ->setUrl($url)
+            ->setUrl($absoluteUrl)
             ->setCode($statusCode);
     }
 
     private function matchRedirectRoute($which, Request $request)
     {
-        $this->loadRouteCollections($which);
+        $this->loadRouteCollections($which, $request);
 
         try {
             /** @var Route $route */
             $route = $this->routeCollections[$which]->match($request);
+
+            if ($this->doesCurrentLocaleMatchBaseUrl($request)) {
+                return '/' . site_locale() . $route->getUri();
+            }
 
             return $route->getUri();
         } catch (NotFoundHttpException $e) {
@@ -201,27 +210,41 @@ class RedirectsProcessor
         }
     }
 
-    private function loadRouteCollections($which)
+    private function loadRouteCollections($which, Request $request)
     {
         if ($this->routeCollections[$which] !== null) {
             return;
         }
 
         $this->routeCollections[$which] = new RouteCollection();
-
         $redirects = ($which === 'manual') ? $this->manualRedirectsManager->all() : $this->autoRedirectsManager->all();
+        $locale = site_locale();
 
         foreach ($redirects as $redirect) {
             $data = $redirect->toArray();
+            $from = $data['from'];
 
-            $route = new Route(['GET'], $data['from'], function () {});
+            // We have to ignore the language prefix for the route, otherwise Statamic's router does not match the request's path.
+            if ($this->doesCurrentLocaleMatchBaseUrl($request)) {
+                $from = preg_replace("#^\/{$locale}(\/.*)#", '$1', $from);
+            }
 
-            if (strpos($data['from'], $this->getWildcardParameter()) !== false) {
+            $route = new Route(['GET'], $from, function () {});
+
+            if (strpos($from, $this->getWildcardParameter()) !== false) {
                 $route->where(self::WILDCARD_NAME, '(.*)');
             }
 
             $this->routeCollections[$which]->add($route);
         }
+    }
+
+    private function doesCurrentLocaleMatchBaseUrl(Request $request)
+    {
+        $locale = site_locale();
+        $baseUrl = '/' . $locale;
+
+        return $request->getBaseUrl() === $baseUrl;
     }
 
     private function getWildcardParameter()

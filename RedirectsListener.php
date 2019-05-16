@@ -5,8 +5,8 @@ namespace Statamic\Addons\Redirects;
 use Statamic\API\Config;
 use Statamic\API\URL;
 use Statamic\API\User;
-use Statamic\Contracts\Data\Data;
 use Statamic\Contracts\Data\Pages\Page;
+use Statamic\Data\Services\PagesService;
 use Statamic\Events\Data\ContentDeleted;
 use Statamic\Events\Data\ContentSaved;
 use Statamic\Events\Data\PageMoved;
@@ -103,7 +103,7 @@ class RedirectsListener extends Listener
         // If we reach this, no redirect exception has been thrown, so log the 404.
         if ($this->getConfigBool('log_404_enable')) {
             app(RedirectsLogger::class)
-                ->log404($request->getPathInfo())
+                ->log404($request->getBaseUrl() . $request->getPathInfo())
                 ->flush();
         }
     }
@@ -125,7 +125,7 @@ class RedirectsListener extends Listener
         $oldPath = $originalAttributes['path'];
         $newPath = $event->data->path();
 
-        $this->handlePageRedirects($event->data, $oldPath, $newPath);
+        $this->handlePageRedirects($event->data, $oldPath, $newPath, $event->original);
     }
 
     public function onContentSaved(ContentSaved $event)
@@ -145,7 +145,7 @@ class RedirectsListener extends Listener
             $oldSlug = null;
             if ($locale === Config::getDefaultLocale()) {
                 $oldSlug = $event->original['attributes']['slug'];
-            } else if (isset($event->original['data'][$locale]) && isset($event->original['data'][$locale]['slug'])){
+            } else if (isset($event->original['data'][$locale])){
                 $oldSlug = $event->original['data'][$locale]['slug'];
             }
 
@@ -182,7 +182,7 @@ class RedirectsListener extends Listener
             ->flush();
     }
 
-    private function handlePageRedirects($page, $oldPath, $newPath)
+    private function handlePageRedirects(Page $page, $oldPath, $newPath, $original = null)
     {
         if (!$this->getConfigBool('auto_redirect_enable')) {
             return;
@@ -193,22 +193,60 @@ class RedirectsListener extends Listener
 
         if ($oldUrl === $newUrl) {
             $this->deleteRedirectsOfUrl($newUrl);
-            return;
+        } else {
+            $autoRedirect = (new AutoRedirect())
+                ->setFromUrl($oldUrl)
+                ->setToUrl($newUrl)
+                ->setContentId($page->id());
+
+            app(AutoRedirectsManager::class)->add($autoRedirect);
+
+            $this->handlePageRedirectsRecursive($page->id(), $oldUrl, $newUrl);
         }
 
-        $autoRedirect = (new AutoRedirect())
-            ->setFromUrl($oldUrl)
-            ->setToUrl($newUrl)
-            ->setContentId($page->id());
+        // Handle the multi language case.
+        foreach ($this->getLocales() as $locale) {
+            // The default locale has been handled above.
+            if ($locale === Config::getDefaultLocale()) {
+                continue;
+            }
 
-        app(AutoRedirectsManager::class)->add($autoRedirect);
+            $localizedPage = $page->in($locale);
 
-        $this->handlePageRedirectsRecursive($page->id(), $oldUrl, $newUrl);
+            // When a page has been saved, the original data is available.
+            if ($original && isset($original['data'][$locale])) {
+                // Check for changed slugs in the current locale
+                $oldSlug = $original['data'][$locale]['slug'];
+                $newSlug = $localizedPage->slug();
+
+                if ($newSlug !== $oldSlug) {
+                    $oldUrl = $localizedPage->url(); // The localized object still returns the old URL...bug?!
+                    $newUrl = str_replace("/$oldSlug", "/$newSlug", $oldUrl);
+
+                    $autoRedirect = (new AutoRedirect())
+                        ->setFromUrl($oldUrl)
+                        ->setToUrl($newUrl)
+                        ->setContentId($page->id());
+
+                    app(AutoRedirectsManager::class)->add($autoRedirect);
+
+                    $this->handlePageRedirectsRecursive($page->id(), $oldUrl, $newUrl, $locale);
+                }
+            } else {
+                // The original is not available, a page has been moved. We only take action if the URLs changed in the default language.
+                // We cannot determine the new URL at this point in the request lifecycle. Let Statamic do its magic and store the
+                // auto redirect via middleware (@see RedirectsMiddleware).
+                if ($oldUrl !== $newUrl) {
+                    $oldUrl = $localizedPage->url();
+                    app(RedirectsMaintenance::class)->addLocalizedAutoRedirect($page->id(), $oldUrl, $locale);
+                }
+            }
+        }
 
         app(AutoRedirectsManager::class)->flush();
     }
 
-    private function handlePageRedirectsRecursive($pageId, $oldUrl, $newUrl)
+    private function handlePageRedirectsRecursive($pageId, $oldUrl, $newUrl, $locale = null)
     {
         // Must retrieve page object via find otherwise children are not loaded...
         $page = PageAPI::find($pageId);
@@ -219,6 +257,10 @@ class RedirectsListener extends Listener
         }
 
         foreach ($childPages as $childPage) {
+            if ($locale) {
+                $childPage = $childPage->in($locale);
+            }
+
             $oldChildUrl = sprintf('%s/%s', $oldUrl, $childPage->slug());
             $newChildUrl = sprintf('%s/%s', $newUrl, $childPage->slug());
 
@@ -229,7 +271,7 @@ class RedirectsListener extends Listener
 
             app(AutoRedirectsManager::class)->add($autoRedirect);
 
-            $this->handlePageRedirectsRecursive($childPage->id(), $oldChildUrl, $newChildUrl);
+            $this->handlePageRedirectsRecursive($childPage->id(), $oldChildUrl, $newChildUrl, $locale);
         }
     }
 

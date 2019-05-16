@@ -195,6 +195,23 @@ class AutoRedirectsManagerTest extends TestCase
         $this->autoRedirectsManager->remove('/foo');
     }
 
+    /**
+     * @test
+     */
+    public function it_should_not_save_a_redirect_if_the_source_equals_the_target()
+    {
+        $redirect = (new AutoRedirect())
+            ->setFromUrl('/foo')
+            ->setToUrl('/foo')
+            ->setContentId('123');
+
+        $this->autoRedirectsManager
+            ->add($redirect)
+            ->flush();
+
+        $this->assertEmpty($this->autoRedirectsManager->all());
+    }
+
     public function tearDown()
     {
         parent::tearDown();

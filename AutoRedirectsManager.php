@@ -13,6 +13,10 @@ class AutoRedirectsManager extends RedirectsManager
      */
     public function add(AutoRedirect $redirect)
     {
+        if ($redirect->getFromUrl() === $redirect->getToUrl()) {
+            return $this;
+        }
+
         $data = $redirect->toArray();
         unset($data['from']);
 

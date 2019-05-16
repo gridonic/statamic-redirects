@@ -14,6 +14,10 @@ class ManualRedirectsManager extends RedirectsManager
      */
     public function add(ManualRedirect $redirect, $position = null)
     {
+        if ($redirect->getFrom() === $redirect->getTo()) {
+            return $this;
+        }
+
         $data = $redirect->toArray();
         unset($data['from']);
 
