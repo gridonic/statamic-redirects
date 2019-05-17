@@ -58,11 +58,11 @@ In case of pages, the module recursively creates redirects for children.
 
 > Auto redirects are viewable and deletable in the control panel, but they cannot be edited via user interface.
 
-> The action dropdown offers a "Create Redirect" option to quickly fix 404s. 
-
 ## 404 Monitor
 
 The 404 monitor shows logged 404 requests with the possibility to quickly create missing redirects.
+
+> The action dropdown offers a "Create Redirect" option to quickly fix a 404. 
 
 ## API
 
