@@ -108,8 +108,8 @@ For redirects to Statamic content, use the content's ID as target:
 ### `auto.yaml`
 
 ```yaml
-/i-came-here-to-drink-milk-and-kick-ass:
-  to: /and-i-have-just-finished-my-milk
+'/i-came-here-to-drink-milk-and-kick-ass':
+  to: '/and-i-have-just-finished-my-milk'
   content_id: 39f64fc4-9598-433a-9adc-3019fcbde7d9
 ```
 
