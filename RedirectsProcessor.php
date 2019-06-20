@@ -169,6 +169,8 @@ class RedirectsProcessor
             }
 
             return $targetUrl;
+        } else if (Str::startsWith($targetUrl, 'http')) {
+            return $targetUrl;
         }
 
         /** @var \Statamic\Contracts\Data\Content\Content $content */

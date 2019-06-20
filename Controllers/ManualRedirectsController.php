@@ -295,7 +295,7 @@ class ManualRedirectsController extends RedirectsController
 
     private function getUrlFromTarget($target)
     {
-        if (Str::startsWith($target, '/')) {
+        if (Str::startsWith($target, '/') || Str::startsWith($target, 'http')) {
             return $target;
         }
 

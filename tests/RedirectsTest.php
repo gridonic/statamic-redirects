@@ -137,7 +137,8 @@ class RedirectsTest extends TestCase
     {
         return [
             ['/from', '/to'],
-            ['/de/from', '/de/to']
+            ['/de/from', '/de/to'],
+            ['/to_external_url', 'https://gridonic.ch'],
         ];
     }
 
