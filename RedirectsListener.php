@@ -145,7 +145,7 @@ class RedirectsListener extends Listener
             $oldSlug = null;
             if ($locale === Config::getDefaultLocale()) {
                 $oldSlug = $event->original['attributes']['slug'];
-            } else if (isset($event->original['data'][$locale])){
+            } else if (isset($event->original['data'][$locale]) && isset($event->original['data'][$locale]['slug'])){
                 $oldSlug = $event->original['data'][$locale]['slug'];
             }
 
@@ -214,7 +214,7 @@ class RedirectsListener extends Listener
             $localizedPage = $page->in($locale);
 
             // When a page has been saved, the original data is available.
-            if ($original && isset($original['data'][$locale])) {
+            if ($original && isset($original['data'][$locale]) && isset($original['data'][$locale]['slug'])) {
                 // Check for changed slugs in the current locale
                 $oldSlug = $original['data'][$locale]['slug'];
                 $newSlug = $localizedPage->slug();
