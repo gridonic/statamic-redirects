@@ -143,7 +143,7 @@ class RedirectsListener extends Listener
             $localizedContent = $content->in($locale);
 
             $oldSlug = null;
-            if ($locale === Config::getDefaultLocale()) {
+            if ($locale === Config::getDefaultLocale() && isset($event->original['attributes']['slug'])) {
                 $oldSlug = $event->original['attributes']['slug'];
             } else if (isset($event->original['data'][$locale]) && isset($event->original['data'][$locale]['slug'])){
                 $oldSlug = $event->original['data'][$locale]['slug'];
