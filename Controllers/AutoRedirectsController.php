@@ -3,10 +3,13 @@
 namespace Statamic\Addons\Redirects\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Statamic\Addons\Redirects\AutoRedirect;
 use Statamic\Addons\Redirects\AutoRedirectsManager;
 use Statamic\Addons\Redirects\RedirectsLogger;
 use Statamic\Addons\Redirects\RedirectsManager;
+use Statamic\API\Config;
+use Statamic\Presenters\PaginationPresenter;
 
 class AutoRedirectsController extends RedirectsController
 {
@@ -41,17 +44,7 @@ class AutoRedirectsController extends RedirectsController
     {
         $items = $this->buildRedirectItems($request);
 
-        return [
-            'items' => $items,
-            'columns' => $this->getColumns(),
-            'pagination' => [
-                'totalItems' => count($items),
-                'itemsPerPage' => count($items),
-                'currentPage' => 1,
-                'prevPage' => null,
-                'nextPage' => null,
-            ],
-        ];
+        return $this->paginatedItemsResponse($items, $this->getColumns(), $request);
     }
 
     public function delete(Request $request)
@@ -79,7 +72,7 @@ class AutoRedirectsController extends RedirectsController
 
     /**
      * @param Request $request
-     * @return array
+     * @return \Illuminate\Support\Collection
      */
     private function buildRedirectItems(Request $request)
     {
@@ -96,8 +89,6 @@ class AutoRedirectsController extends RedirectsController
             ]);
         });
 
-        return $this->sortItems($items, $request)
-            ->values()
-            ->all();
+        return $this->sortItems($items, $request);
     }
 }
