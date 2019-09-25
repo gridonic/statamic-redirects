@@ -5,17 +5,17 @@
 
 ## How it works
 
-Redirects from this module are kept separate from Statamic's redirects configured via routing YAML file.
+Redirects from this module are kept separate from Statamic's redirects configured in the `routes.yaml` file.
 They are only checked and possibly executed if a `404` response is created by Statamic.
 The module differentiates two types of redirects:
 
 * **Manual Redirects** are managed by authorized users in the control panel.
-* **Auto Redirects** are created by the module to redirect old URLs of content (Pages, Entries, or Terms).
+* **Auto Redirects** are created by the module to redirect old URLs of content (pages, entries, or terms).
 
 ## Configuration
 
 * **Enable auto redirects** Whether to enable auto redirects.
-* **Log 404s** Whether to enable logging 404 requests.
+* **Log 404s** Whether to log 404 requests.
 * **Access to manage redirects** Enter role slugs to restrict access to view and manage redirects to certain roles.
 If empty, all roles are able to view and manage.
 
@@ -25,13 +25,13 @@ A manual redirect consist of the following options:
 
 * **From URL** The relative source URL for the redirect, e.g. `/source`.
 * **Target** The target is either a static URL or the ID of any content (which resolves to the content's URL).
-* **Status Code** `301` Moved Permanently or `302` Moved Temporary.
+* **Status Code** `301` Moved permanently or `302` Moved temporary.
 * **Retain Query Strings** Whether to append query strings from the source URL to the target URL.
 * **Locale** Only execute the redirect depending on a locale.
 * **Timed Activation** Only execute the redirect in a given date range.
 Only specifying a start date delays the activation of the redirect after the given date.
 Only specifying an end date activates the redirect until the given date.
-If both dates are specified, a temporary redirect status code `302` gets applied automatically.
+If both dates are specified, a temporary status code `302` gets applied automatically.
 
 ### Route Parameters
 
@@ -45,14 +45,14 @@ offers a special wildcard parameter `{any}` to match any number of URL segments.
 `/news/{any}` will match and redirect `/news/any/following/url/segment` to the configured target.
 
 > Note that the order of the redirects matter if you use parameters, as multiple route definitions might match
-the current request's URL. You can reorder manual redirects in the control panel. 
+the request's URL. You can reorder manual redirects in the control panel. 
 
 ## Auto Redirects
 
 The module listens to various events to detect changed URLs of content and to redirect ols URLs to the new ones.
 
-* Updated URLs when changing slugs
-* Updated URLs due to moving pages in the page tree
+* Updated URLs when changing slugs.
+* Updated URLs due to moving pages in the page tree.
 
 In case of pages, the module recursively creates redirects for children.
 
@@ -84,7 +84,8 @@ or to use [automatic dependency injection](https://laravel.com/docs/5.8/containe
 
 ## Redirects Storage
 
-Redirects and logs are stored as YAML files in the `/site/storage/addons/redirects` directory.
+Redirects and logs are stored as YAML files in the `/site/storage/addons/redirects` directory. Feel free to modify or add
+any redirects directly in the YAML files if you do not use the control panel.
 
 ### `manual.yaml`
 

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2019-09-26
+
+### Added
+
+* Add pagination for the 404 monitor and auto redirects in Statamic's control panel
+* Emit the `AddonSettingsSaved` when saving manual or auto redirects, allowing [Spock](https://statamic.com/marketplace/addons/spock) to detect changed redirects  
+
 ## [1.1.1] - 2019-09-10
 
 ### Fixed
@@ -22,7 +29,8 @@
 
 * Initial release of the addon 🐣
 
-[Unreleased]: https://github.com/gridonic/statamic-redirects/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/gridonic/statamic-redirects/compare/v1.2.0...HEAD
 [1.0.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.0.0
 [1.1.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.1.0
 [1.1.1]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.1.1
+[1.2.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.2.0
