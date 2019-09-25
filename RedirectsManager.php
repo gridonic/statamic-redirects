@@ -4,6 +4,7 @@ namespace Statamic\Addons\Redirects;
 
 use Statamic\API\File;
 use Statamic\API\YAML;
+use Statamic\Events\Data\AddonSettingsSaved;
 
 abstract class RedirectsManager
 {
@@ -66,6 +67,11 @@ abstract class RedirectsManager
     {
         if ($this->redirects !== null) {
             File::put($this->storagePath, YAML::dump($this->redirects));
+
+            // Emit an event that the redirects have been changed.
+            // Note: The "AddonSettingsSaved" event is semantically not 100% correct, as we did not change the addon's settings.
+            // However, it allows the Spock addon to detect changed redirect YAML files, as Spock is listening to this event by default.
+            event(new AddonSettingsSaved($this->storagePath, $this->redirects));
         }
 
         $this->redirectsLogger->flush();
