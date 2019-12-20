@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2019-12-20
+
+### Fixed
+
+* Fix redirects for secondary locales
+
 ## [1.2.0] - 2019-09-26
 
 ### Added

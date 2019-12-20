@@ -253,6 +253,17 @@ class RedirectsProcessor
 
     private function getBaseUrlOfCurrentLocale()
     {
-        return rtrim(Config::getSiteUrl(), '/');
+        $siteUrl = rtrim(Config::getSiteUrl(), '/');
+
+        if (Str::startsWith($siteUrl, '/')) {
+            return $siteUrl;
+        }
+
+        // https://foo.com    -> /
+        // https://foo.com/fr -> /fr
+        // https://foo.com/it -> /it
+        preg_match('#^https?://.*(/.*)$#', $siteUrl, $matches);
+
+        return count($matches) ? $matches[1] : '/';
     }
 }
