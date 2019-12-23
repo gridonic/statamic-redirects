@@ -16,6 +16,7 @@ The module differentiates two types of redirects:
 
 * **Enable auto redirects** Whether to enable auto redirects.
 * **Log 404s** Whether to log 404 requests.
+* **Log redirects** Whether to log any executed manual or auto redirects.
 * **Access to manage redirects** Enter role slugs to restrict access to view and manage redirects to certain roles.
 If empty, all roles are able to view and manage.
 
@@ -44,8 +45,9 @@ does not match the URL `/news/cms` because of the missing `slug` URL segment. Th
 offers a special wildcard parameter `{any}` to match any number of URL segments. For example, the source URL
 `/news/{any}` will match and redirect `/news/any/following/url/segment` to the configured target.
 
-> Note that the order of the redirects matter if you use parameters, as multiple route definitions might match
-the request's URL. You can reorder manual redirects in the control panel. 
+> Note that the order of redirects matter if you use parameters, as multiple route definitions might match
+the request. You can reorder manual redirects in the control panel. The addon processes the redirects in the same
+order. 
 
 ## Auto Redirects
 
