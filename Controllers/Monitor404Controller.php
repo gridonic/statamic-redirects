@@ -3,10 +3,8 @@
 namespace Statamic\Addons\Redirects\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Statamic\Addons\Redirects\RedirectsAccessChecker;
 use Statamic\Addons\Redirects\RedirectsLogger;
-use Statamic\API\Config;
-use Statamic\Presenters\PaginationPresenter;
 
 class Monitor404Controller extends RedirectsController
 {
@@ -15,9 +13,9 @@ class Monitor404Controller extends RedirectsController
      */
     private $redirectsLogger;
 
-    public function __construct(RedirectsLogger $redirectsLogger)
+    public function __construct(RedirectsLogger $redirectsLogger, RedirectsAccessChecker $redirectsAccessChecker)
     {
-        parent::__construct();
+        parent::__construct($redirectsAccessChecker);
 
         $this->redirectsLogger = $redirectsLogger;
     }

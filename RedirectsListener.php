@@ -6,7 +6,6 @@ use Statamic\API\Config;
 use Statamic\API\URL;
 use Statamic\API\User;
 use Statamic\Contracts\Data\Pages\Page;
-use Statamic\Data\Services\PagesService;
 use Statamic\Events\Data\ContentDeleted;
 use Statamic\Events\Data\ContentSaved;
 use Statamic\Events\Data\PageMoved;
@@ -19,8 +18,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectsListener extends Listener
 {
-    use RedirectsAuthTrait;
-
     /**
      * The events to be listened for, and the methods to call.
      *
@@ -46,7 +43,7 @@ class RedirectsListener extends Listener
      */
     public function addNavItems($nav)
     {
-        if (!$this->hasAccess(User::getCurrent())) {
+        if (!app(RedirectsAccessChecker::class)->hasAccess(User::getCurrent())) {
             return;
         }
 

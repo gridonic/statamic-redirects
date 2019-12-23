@@ -13,6 +13,7 @@ use Statamic\API\Config;
 use Statamic\API\Entry;
 use Statamic\API\Page;
 use Statamic\API\Stache;
+use Statamic\Config\Addons;
 use Statamic\Config\Settings;
 
 /**
@@ -79,7 +80,12 @@ class RedirectsTest extends TestCase
         });
 
         $this->app->singleton(RedirectsProcessor::class, function () {
-            return new RedirectsProcessor($this->manualRedirectsManager, $this->autoRedirectsManager, $this->redirectsLogger);
+            return new RedirectsProcessor(
+                $this->manualRedirectsManager,
+                $this->autoRedirectsManager,
+                $this->redirectsLogger,
+                $this->getAddonConfig()
+            );
         });
 
         // Create a second locale for testing multi language.
@@ -461,6 +467,48 @@ class RedirectsTest extends TestCase
         $this->assertEquals(['/not-existing-source' => 1], $logs);
     }
 
+    /**
+     * @test
+     */
+    public function it_should_not_log_manual_redirects_if_logging_is_disabled()
+    {
+        $this->disableRedirectsLogging();
+
+        $redirect = (new ManualRedirect())
+            ->setFrom('/from')
+            ->setTo('/to');
+
+        $this->manualRedirectsManager
+            ->add($redirect)
+            ->flush();
+
+        $this->get('/from');
+        $this->assertRedirectedTo('/to');
+        $this->assertEmpty($this->redirectsLogger->getManualRedirects());
+    }
+
+    /**
+     * @test
+     */
+    public function it_should_not_log_auto_redirects_if_logging_is_disabled()
+    {
+        $this->disableRedirectsLogging();
+
+        $redirect = (new AutoRedirect())
+            ->setFromUrl('/from-auto')
+            ->setToUrl('/to-auto')
+            ->setContentId('1234');
+
+        $this->autoRedirectsManager
+            ->add($redirect)
+            ->flush();
+
+        $this->get('/from-auto');
+
+        $this->assertRedirectedTo('/to-auto');
+        $this->assertEmpty($this->redirectsLogger->getAutoRedirects());
+    }
+
     public function createApplication()
     {
         $app = require statamic_path('/bootstrap') . '/app.php';
@@ -487,6 +535,16 @@ class RedirectsTest extends TestCase
         @unlink($this->storagePath . 'log_404.yaml');
 
         parent::tearDown();
+    }
+
+    private function getAddonConfig()
+    {
+        return [
+            'access_roles' => [],
+            'log_404_enable' => true,
+            'log_redirects_enable' => true,
+            'auto_redirect_enable' => true,
+        ];
     }
 
     /**
@@ -517,5 +575,19 @@ class RedirectsTest extends TestCase
         $this->pages[] = $page;
 
         return $page;
+    }
+
+    private function disableRedirectsLogging()
+    {
+        $addonConfig = array_merge($this->getAddonConfig(), ['log_redirects_enable' => false]);
+
+        $this->app->singleton(RedirectsProcessor::class, function () use ($addonConfig) {
+            return new RedirectsProcessor(
+                $this->manualRedirectsManager,
+                $this->autoRedirectsManager,
+                $this->redirectsLogger,
+                $addonConfig
+            );
+        });
     }
 }

@@ -39,11 +39,22 @@ class RedirectsProcessor
         'auto' => null,
     ];
 
-    public function __construct(ManualRedirectsManager $manualRedirectsManager, AutoRedirectsManager $autoRedirectsManager, RedirectsLogger $redirectsLogger)
+    /**
+     * @var array
+     */
+    private $addonConfig;
+
+    public function __construct(
+        ManualRedirectsManager $manualRedirectsManager,
+        AutoRedirectsManager $autoRedirectsManager,
+        RedirectsLogger $redirectsLogger,
+        array $addonConfig
+    )
     {
         $this->manualRedirectsManager = $manualRedirectsManager;
         $this->redirectsLogger = $redirectsLogger;
         $this->autoRedirectsManager = $autoRedirectsManager;
+        $this->addonConfig = collect($addonConfig);
     }
 
     /**
@@ -61,6 +72,11 @@ class RedirectsProcessor
         $this->performAutoRedirect($request);
     }
 
+    public function shouldLogRedirect()
+    {
+        return (bool)$this->addonConfig->get('log_redirects_enable', true);
+    }
+
     private function performAutoRedirect(Request $request)
     {
         $route = $this->matchRedirectRoute('auto', $request);
@@ -73,9 +89,11 @@ class RedirectsProcessor
             return;
         }
 
-        $this->redirectsLogger
-            ->logAutoRedirect($route)
-            ->flush();
+        if ($this->shouldLogRedirect()) {
+            $this->redirectsLogger
+                ->logAutoRedirect($route)
+                ->flush();
+        }
 
         $this->throwRedirectException($redirect->getToUrl(), 301);
     }
@@ -124,9 +142,11 @@ class RedirectsProcessor
             $redirectUrl .= '?' . $request->getQueryString();
         }
 
-        $this->redirectsLogger
-            ->logManualRedirect($route)
-            ->flush();
+        if ($this->shouldLogRedirect()) {
+            $this->redirectsLogger
+                ->logManualRedirect($route)
+                ->flush();
+        }
 
         $this->throwRedirectException($redirectUrl, $statusCode);
     }

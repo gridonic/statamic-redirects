@@ -3,13 +3,11 @@
 namespace Statamic\Addons\Redirects\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Statamic\Addons\Redirects\AutoRedirect;
 use Statamic\Addons\Redirects\AutoRedirectsManager;
+use Statamic\Addons\Redirects\RedirectsAccessChecker;
 use Statamic\Addons\Redirects\RedirectsLogger;
 use Statamic\Addons\Redirects\RedirectsManager;
-use Statamic\API\Config;
-use Statamic\Presenters\PaginationPresenter;
 
 class AutoRedirectsController extends RedirectsController
 {
@@ -23,9 +21,9 @@ class AutoRedirectsController extends RedirectsController
      */
     private $redirectsLogger;
 
-    public function __construct(AutoRedirectsManager $autoRedirectsManager, RedirectsLogger $redirectsLogger)
+    public function __construct(AutoRedirectsManager $autoRedirectsManager, RedirectsLogger $redirectsLogger, RedirectsAccessChecker $redirectsAccessChecker)
     {
-        parent::__construct();
+        parent::__construct($redirectsAccessChecker);
 
         $this->autoRedirectsManager = $autoRedirectsManager;
         $this->redirectsLogger = $redirectsLogger;
@@ -63,11 +61,16 @@ class AutoRedirectsController extends RedirectsController
 
     private function getColumns()
     {
-        return [
+        $columns = [
             ['value' => 'from', 'header' => $this->trans('common.from')],
             ['value' => 'to', 'header' => $this->trans('common.to')],
-            ['value' => 'hits', 'header' => $this->trans('common.hits')],
         ];
+
+        if ($this->shouldLogRedirects()) {
+            $columns[] = ['value' => 'hits', 'header' => $this->trans('common.hits')];
+        }
+
+        return $columns;
     }
 
     /**
@@ -90,5 +93,10 @@ class AutoRedirectsController extends RedirectsController
         });
 
         return $this->sortItems($items, $request);
+    }
+
+    private function shouldLogRedirects()
+    {
+        return $this->getConfigBool('log_redirects_enable', true);
     }
 }

@@ -5,7 +5,7 @@ namespace Statamic\Addons\Redirects\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Statamic\Addons\Redirects\RedirectsAuthTrait;
+use Statamic\Addons\Redirects\RedirectsAccessChecker;
 use Statamic\API\Config;
 use Statamic\API\User;
 use Statamic\Exceptions\UnauthorizedHttpException;
@@ -14,12 +14,16 @@ use Statamic\Presenters\PaginationPresenter;
 
 abstract class RedirectsController extends Controller
 {
-    use RedirectsAuthTrait;
+    /**
+     * @var RedirectsAccessChecker
+     */
+    private $redirectsAccessChecker;
 
-    public function __construct()
+    public function __construct(RedirectsAccessChecker $redirectsAccessChecker)
     {
         parent::__construct();
 
+        $this->redirectsAccessChecker = $redirectsAccessChecker;
         $this->checkAccess();
     }
 
@@ -60,7 +64,7 @@ abstract class RedirectsController extends Controller
 
     private function checkAccess()
     {
-        if (!$this->hasAccess(User::getCurrent())) {
+        if (!$this->redirectsAccessChecker->hasAccess(User::getCurrent())) {
             throw new UnauthorizedHttpException(403);
         }
     }

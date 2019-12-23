@@ -23,7 +23,12 @@ class RedirectsServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(RedirectsProcessor::class, function ($app) {
-            return new RedirectsProcessor($app[ManualRedirectsManager::class], $app[AutoRedirectsManager::class], $app[RedirectsLogger::class]);
+            return new RedirectsProcessor(
+                $app[ManualRedirectsManager::class],
+                $app[AutoRedirectsManager::class],
+                $app[RedirectsLogger::class],
+                $this->getConfig()
+            );
         });
 
         $this->app->singleton(RedirectsLogger::class, function () use ($storagePath) {
@@ -32,6 +37,10 @@ class RedirectsServiceProvider extends ServiceProvider
 
         $this->app->singleton(RedirectsMaintenance::class, function () {
             return new RedirectsMaintenance();
+        });
+
+        $this->app->singleton(RedirectsAccessChecker::class, function () {
+            return new RedirectsAccessChecker();
         });
     }
 
@@ -48,6 +57,7 @@ class RedirectsServiceProvider extends ServiceProvider
             RedirectsProcessor::class,
             RedirectsLogger::class,
             RedirectsMaintenance::class,
+            RedirectsAccessChecker::class,
         ];
     }
 

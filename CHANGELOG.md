@@ -2,11 +2,15 @@
 
 ## [Unreleased]
 
-## [1.3.0] - 2019-12-20
+## [1.3.0] - 2019-12-23
 
 ### Fixed
 
 * Fix redirects for secondary locales
+
+### Added
+
+* Add possibility to disable logging redirects
 
 ## [1.2.0] - 2019-09-26
 
@@ -35,8 +39,9 @@
 
 * Initial release of the addon 🐣
 
-[Unreleased]: https://github.com/gridonic/statamic-redirects/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/gridonic/statamic-redirects/compare/v1.3.0...HEAD
 [1.0.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.0.0
 [1.1.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.1.0
 [1.1.1]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.1.1
 [1.2.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.2.0
+[1.3.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.3.0

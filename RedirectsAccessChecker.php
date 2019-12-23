@@ -6,7 +6,7 @@ use Statamic\API\Role;
 use Statamic\Contracts\Data\Users\User;
 use Statamic\Extend\Extensible;
 
-trait RedirectsAuthTrait
+class RedirectsAccessChecker
 {
     use Extensible;
 

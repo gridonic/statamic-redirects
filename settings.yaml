@@ -7,6 +7,10 @@ fields:
     type: toggle
     display: Log 404s
     instructions: Log any 404 requests and show them in the 404 monitor.
+  log_redirects_enable:
+    type: toggle
+    display: Log redirects
+    instructions: Log how many times a manual or auto redirect has been executed.
   access_roles:
     type: list
     display: Access to manage redirects

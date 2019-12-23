@@ -5,6 +5,7 @@ namespace Statamic\Addons\Redirects\Controllers;
 use Illuminate\Http\Request;
 use Statamic\Addons\Redirects\ManualRedirect;
 use Statamic\Addons\Redirects\ManualRedirectsManager;
+use Statamic\Addons\Redirects\RedirectsAccessChecker;
 use Statamic\Addons\Redirects\RedirectsLogger;
 use Statamic\API\Collection;
 use Statamic\API\Config;
@@ -15,10 +16,12 @@ use Statamic\API\Str;
 use Statamic\API\Taxonomy;
 use Statamic\API\YAML;
 use Statamic\CP\Publish\ProcessesFields;
+use Statamic\Extend\Extensible;
 
 class ManualRedirectsController extends RedirectsController
 {
     use ProcessesFields;
+    use Extensible;
 
     /**
      * @var ManualRedirectsManager
@@ -30,9 +33,9 @@ class ManualRedirectsController extends RedirectsController
      */
     private $redirectsLogger;
 
-    public function __construct(ManualRedirectsManager $manualRedirectsManager, RedirectsLogger $redirectsLogger)
+    public function __construct(ManualRedirectsManager $manualRedirectsManager, RedirectsLogger $redirectsLogger, RedirectsAccessChecker $redirectsAccessChecker)
     {
-        parent::__construct();
+        parent::__construct($redirectsAccessChecker);
 
         $this->manualRedirectsManager = $manualRedirectsManager;
         $this->redirectsLogger = $redirectsLogger;
@@ -182,7 +185,7 @@ class ManualRedirectsController extends RedirectsController
 
     private function getColumns()
     {
-        return [
+        $columns = [
             ['value' => 'from', 'header' => $this->trans('common.from')],
             ['value' => 'to', 'header' => $this->trans('common.to')],
             ['value' => 'target_type', 'header' => $this->trans('common.target_type')],
@@ -190,8 +193,13 @@ class ManualRedirectsController extends RedirectsController
             ['value' => 'locale', 'header' => trans('cp.locale')],
             ['value' => 'start_date', 'header' => $this->trans('common.start_date')],
             ['value' => 'end_date', 'header' => $this->trans('common.end_date')],
-            ['value' => 'hits', 'header' => $this->trans('common.hits')],
         ];
+
+        if ($this->shouldLogRedirects()) {
+            $columns[] = ['value' => 'hits', 'header' => $this->trans('common.hits')];
+        }
+
+        return $columns;
     }
 
     private function getFieldset()
@@ -319,5 +327,10 @@ class ManualRedirectsController extends RedirectsController
         }
 
         return 'url';
+    }
+
+    private function shouldLogRedirects()
+    {
+        return $this->getConfigBool('log_redirects_enable', true);
     }
 }
