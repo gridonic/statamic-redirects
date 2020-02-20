@@ -139,7 +139,9 @@ class RedirectsProcessor
         }
 
         if ($redirect->isRetainQueryStrings() && $request->getQueryString()) {
-            $redirectUrl .= '?' . $request->getQueryString();
+            // If redirect target already contains a query string, concat additional query string with `&`, otherwise default to `?`
+            $redirectUrl .= (strpos($redirectUrl, '?') !== false) ? '&' : '?';
+            $redirectUrl .= $request->getQueryString();
         }
 
         if ($this->shouldLogRedirect()) {
