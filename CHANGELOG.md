@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2020-02-26
+
+### Added
+
+* Support query string retention for target URLs which already contain a query string - thanks @PhilJ
+
 ## [1.3.0] - 2019-12-23
 
 ### Fixed
@@ -39,9 +45,10 @@
 
 * Initial release of the addon 🐣
 
-[Unreleased]: https://github.com/gridonic/statamic-redirects/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/gridonic/statamic-redirects/compare/v1.4.0...HEAD
 [1.0.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.0.0
 [1.1.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.1.0
 [1.1.1]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.1.1
 [1.2.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.2.0
 [1.3.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.3.0
+[1.4.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.4.0
