@@ -109,32 +109,22 @@ class RedirectsProcessor
             return;
         }
 
-        // Bail if the request's locale does not match the configured one.
-        if ($redirect->getLocale() && $redirect->getLocale() !== site_locale()) {
+        if (!$this->shouldExecuteBasedOnLocale($redirect)) {
             return;
         }
 
         $redirectUrl = $this->normalizeRedirectUrl($redirect->getTo(), $route, $request);
-
         if (!$redirectUrl) {
             return;
         }
 
         $statusCode = $redirect->getStatusCode();
 
-        // Check if the redirect is only executed in a time range.
-        if ($redirect->getStartDate() || $redirect->getEndDate()) {
-            $now = time();
-            if ($redirect->getStartDate() && ($redirect->getStartDate()->getTimestamp() > $now)) {
-                return;
-            }
-
-            if ($redirect->getEndDate() && ($redirect->getEndDate()->getTimestamp() < $now)) {
-                return;
-            }
-
+        if ($this->shouldExecuteBasedOnDateRange($redirect)) {
             // If start and end date are specified, this is a temporary redirect by design (302).
             $statusCode = ($redirect->getStartDate() && $redirect->getEndDate()) ? 302 : $statusCode;
+        } else {
+            return;
         }
 
         if ($redirect->isRetainQueryStrings() && $request->getQueryString()) {
@@ -148,6 +138,31 @@ class RedirectsProcessor
         }
 
         $this->throwRedirectException($redirectUrl, $statusCode);
+    }
+
+    private function shouldExecuteBasedOnLocale(ManualRedirect $redirect) {
+        if (!$redirect->getLocale()) {
+            return true;
+        }
+
+        return $redirect->getLocale() === site_locale();
+    }
+
+    private function shouldExecuteBasedOnDateRange(ManualRedirect $redirect) {
+        if (!$redirect->getStartDate() && !$redirect->getEndDate()) {
+            return true;
+        }
+
+        $now = time();
+        if ($redirect->getStartDate() && ($redirect->getStartDate()->getTimestamp() > $now)) {
+            return false;
+        }
+
+        if ($redirect->getEndDate() && ($redirect->getEndDate()->getTimestamp() < $now)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
