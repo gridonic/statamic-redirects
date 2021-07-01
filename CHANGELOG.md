@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [1.5.0] - 2021-07-01
+
+### Changed
+
+* Execute redirects if logging fails ([#8](https://github.com/gridonic/statamic-redirects/issues/8)) 
 
 ## [1.4.0] - 2020-02-26
 
@@ -52,3 +56,4 @@
 [1.2.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.2.0
 [1.3.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.3.0
 [1.4.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.4.0
+[1.5.0]: https://github.com/gridonic/statamic-redirects/releases/tag/v1.5.0
