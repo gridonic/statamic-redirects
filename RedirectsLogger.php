@@ -120,12 +120,24 @@ class RedirectsLogger
     {
         if ($this->data[$which] === null) {
             $file = $this->getYamlFile($which);
-            $this->data[$which] = File::exists($file) ? YAML::parse(File::get($file)) : [];
+            $this->data[$which] = $this->parseYaml($file);
         }
     }
 
     private function getYamlFile($which)
     {
         return $this->storagePath . 'log_' . $which . '.yaml';
+    }
+
+    private function parseYaml($file) {
+        if (!File::exists($file)) {
+            return [];
+        }
+
+        try {
+            return YAML::parse(File::get($file));
+        } catch (\Exception $e) {
+            throw new RedirectsLogParseException($file, $e);
+        }
     }
 }

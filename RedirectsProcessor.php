@@ -5,6 +5,7 @@ namespace Statamic\Addons\Redirects;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\RouteCollection;
+use Illuminate\Support\Facades\Log;
 use Statamic\API\Config;
 use Statamic\API\Content;
 use Statamic\API\Str;
@@ -90,9 +91,7 @@ class RedirectsProcessor
         }
 
         if ($this->shouldLogRedirect()) {
-            $this->redirectsLogger
-                ->logAutoRedirect($route)
-                ->flush();
+            $this->tryLoggingAutoRedirect($route);
         }
 
         $this->throwRedirectException($redirect->getToUrl(), 301);
@@ -145,9 +144,7 @@ class RedirectsProcessor
         }
 
         if ($this->shouldLogRedirect()) {
-            $this->redirectsLogger
-                ->logManualRedirect($route)
-                ->flush();
+            $this->tryLoggingManualRedirect($route);
         }
 
         $this->throwRedirectException($redirectUrl, $statusCode);
@@ -287,5 +284,31 @@ class RedirectsProcessor
         preg_match('#^https?://.*(/.*)$#', $siteUrl, $matches);
 
         return count($matches) ? $matches[1] : '/';
+    }
+
+    private function tryLoggingAutoRedirect($route)
+    {
+        try {
+            $this->redirectsLogger
+                ->logAutoRedirect($route)
+                ->flush();
+        } catch (RedirectsLogParseException $e) {
+            $this->logRedirectsParseException($e);
+        }
+    }
+
+    private function tryLoggingManualRedirect($route)
+    {
+        try {
+            $this->redirectsLogger
+                ->logManualRedirect($route)
+                ->flush();
+        } catch (RedirectsLogParseException $e) {
+            $this->logRedirectsParseException($e);
+        }
+    }
+
+    private function logRedirectsParseException($e) {
+        Log::error($e->getMessage(), ['original' => $e->getPrevious()->getMessage()]);
     }
 }
