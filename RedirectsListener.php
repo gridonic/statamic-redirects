@@ -2,6 +2,7 @@
 
 namespace Statamic\Addons\Redirects;
 
+use Illuminate\Support\Facades\Log;
 use Statamic\API\Config;
 use Statamic\API\URL;
 use Statamic\API\User;
@@ -99,9 +100,8 @@ class RedirectsListener extends Listener
 
         // If we reach this, no redirect exception has been thrown, so log the 404.
         if ($this->getConfigBool('log_404_enable')) {
-            app(RedirectsLogger::class)
-                ->log404($request->getBaseUrl() . $request->getPathInfo())
-                ->flush();
+            $route = $request->getBaseUrl() . $request->getPathInfo();
+            $this->tryLogging404($route);
         }
     }
 
@@ -241,6 +241,17 @@ class RedirectsListener extends Listener
         }
 
         app(AutoRedirectsManager::class)->flush();
+    }
+
+    private function tryLogging404($route)
+    {
+        try {
+            app(RedirectsLogger::class)
+                ->log404($route)
+                ->flush();
+        } catch (RedirectsLogParseException $e) {
+            Log::error($e->getMessage(), ['original' => $e->getPrevious()->getMessage()]);
+        }
     }
 
     private function handlePageRedirectsRecursive($pageId, $oldUrl, $newUrl, $locale = null)
